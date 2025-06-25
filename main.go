@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/boomatang/crystal/internal/workflow"
 )
+
+var worldMain *workflow.World
 
 func echoHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Method: %s\n", r.Method)
@@ -29,8 +33,64 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func workflowGraphHandler(world *workflow.World) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		fmt.Print(world.GetName())
+		render := workflow.WorldGraph{World: world}
+		fmt.Fprintln(w, render.Render())
+	}
+
+}
+
+func alan() error {
+	fmt.Println("This was a function call")
+	return nil
+}
+func tom() error {
+	fmt.Println("This was a function call")
+	return nil
+}
+func john() error {
+	fmt.Println("This was a function call")
+	return nil
+}
+func mark() error {
+	fmt.Println("This was a function call")
+	return nil
+}
+
 func main() {
-	http.HandleFunc("/", echoHandler)
+	actionAlan := workflow.NewPoint(alan)
+	actionTom := workflow.NewPoint(tom)
+	actionJohn := workflow.NewPoint(john)
+	actionMark := workflow.NewPoint(mark)
+	worldOne := workflow.NewWorld("Temporay world")
+	worldOne.PreCondition = actionTom
+	worldOne.PostCondition = actionJohn
+	worldOne.ErrorHandler = actionMark
+	for i := 0; i < 10; i++ {
+		worldOne.AddAction(actionAlan)
+	}
+
+	worldMain := workflow.NewWorld("Main World")
+	worldMain.PreCondition = worldOne
+	worldMain.AddAction(actionAlan)
+	worldMain.AddAction(actionTom)
+	worldMain.AddAction(actionMark)
+	worldMain.AddAction(actionJohn)
+	worldMain.AddAction(worldOne)
+	worldMain.PostCondition = worldOne
+
+	// err := worldMain.RunAction()
+	// if err != nil {
+	// 	fmt.Printf("error was raised, %s", err)
+	// }
+
+	// render := workflow.WorldGraph{World: worldMain}
+	// fmt.Println(render.Render())
+
+	http.HandleFunc("/echo", echoHandler)
+	http.HandleFunc("/graph", workflowGraphHandler(worldMain))
 
 	port := ":8000"
 	fmt.Println("Echo server running on http://localhost" + port)
@@ -38,4 +98,5 @@ func main() {
 	if err != nil {
 		fmt.Println("Server Failed:", err)
 	}
+
 }
