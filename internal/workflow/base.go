@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type Action interface {
@@ -50,6 +52,11 @@ type World struct {
 }
 
 func (w *World) RunAction() error {
+	timer := prometheus.NewTimer(ActionDuration.WithLabelValues(w.GetName()))
+	defer timer.ObserveDuration()
+
+	ActionTotal.WithLabelValues(w.GetName()).Inc()
+
 	fmt.Println(w.GetName())
 	if w.PreCondition != nil {
 		fmt.Printf("Precondition is running: %v \n", w.PreCondition.GetName())

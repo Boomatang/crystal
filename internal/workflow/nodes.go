@@ -53,6 +53,10 @@ type NodeList struct {
 	linkers []Link
 }
 
+func (nl *NodeList) Len() int {
+	return len(nl.nodes)
+}
+
 func (nl *NodeList) Contains(node Node) bool {
 	for _, n := range nl.nodes {
 		if n.Kind == node.Kind && n.Name == node.Name {

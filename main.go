@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/boomatang/crystal/internal/applicaton"
 	"github.com/boomatang/crystal/internal/workflow"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -14,6 +16,10 @@ var (
 	mu        sync.Mutex
 	eventChan chan bool
 )
+
+func init() {
+	workflow.MustRegister()
+}
 
 func workflowGraphHandler(world *workflow.World) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
@@ -42,7 +48,6 @@ func eventHandler(c chan bool) http.HandlerFunc {
 		}
 
 		mu.Lock()
-		fmt.Println("This should be printing")
 		events = append(events, event)
 		mu.Unlock()
 		c <- true
@@ -69,7 +74,6 @@ func eventProcessor(world *workflow.World, nodes *workflow.NodeList) {
 		load := events
 		events = make([]workflow.Event, 0)
 		mu.Unlock()
-		fmt.Println("this should happen")
 		for _, l := range load {
 			existing := nodes.Get(l.Kind, l.Name)
 			if existing == nil {
@@ -78,60 +82,20 @@ func eventProcessor(world *workflow.World, nodes *workflow.NodeList) {
 				existing = node
 			}
 			nodes.Link(existing)
-			fmt.Print("existing parents: ")
-			fmt.Println(existing.Parents)
-			fmt.Print("existing Childern: ")
-			fmt.Println(existing.Childern)
 		}
 		fmt.Println("triggered by event")
-		fmt.Println(nodes)
 
-		// err := world.RunAction()
-		// if err != nil {
-		// 	fmt.Printf("error was raised, %s", err)
-		// }
+		workflow.NodeCount.Set(float64(nodes.Len()))
+		err := world.RunAction()
+		if err != nil {
+			fmt.Printf("error was raised, %s", err)
+		}
 	}
-}
-
-func alan() error {
-	fmt.Println("This was a function call")
-	return nil
-}
-func tom() error {
-	fmt.Println("This was a function call")
-	return nil
-}
-func john() error {
-	fmt.Println("This was a function call")
-	return nil
-}
-func mark() error {
-	fmt.Println("This was a function call")
-	return nil
 }
 
 func main() {
-	actionAlan := workflow.NewPoint(alan)
-	actionTom := workflow.NewPoint(tom)
-	actionJohn := workflow.NewPoint(john)
-	actionMark := workflow.NewPoint(mark)
-	worldOne := workflow.NewWorld("Temporay world")
-	worldOne.PreCondition = actionTom
-	worldOne.PostCondition = actionJohn
-	worldOne.ErrorHandler = actionMark
-	for i := 0; i < 10; i++ {
-		worldOne.AddAction(actionAlan)
-	}
 
-	worldMain := workflow.NewWorld("Main World")
-	worldMain.PreCondition = worldOne
-	worldMain.AddAction(actionAlan)
-	worldMain.AddAction(actionTom)
-	worldMain.AddAction(actionMark)
-	worldMain.AddAction(actionJohn)
-	worldMain.AddAction(worldOne)
-	worldMain.PostCondition = worldOne
-
+	worldMain := applicaton.NewApplictaion()
 	eventChan = make(chan bool, 100)
 	link := workflow.Link{Parent: "crd", Child: "cr", LinkFunc: func(p, c *workflow.Node) bool {
 		fmt.Println("Happy holidays")
@@ -141,14 +105,18 @@ func main() {
 	nodes.SetLinker(link)
 	go eventProcessor(worldMain, nodes)
 
-	http.HandleFunc("/graph", workflowGraphHandler(worldMain))
-	http.HandleFunc("/nodelist", nodelistGraphHandler(nodes))
-	http.HandleFunc("/event", eventHandler(eventChan))
-	http.HandleFunc("/list", listEventsHandler())
+	mux := http.NewServeMux()
+
+	// Expose metrics at /metrics
+	mux.Handle("/metrics", promhttp.Handler())
+	mux.Handle("/graph", workflowGraphHandler(worldMain))
+	mux.Handle("/nodelist", nodelistGraphHandler(nodes))
+	mux.Handle("/event", eventHandler(eventChan))
+	mux.Handle("/list", listEventsHandler())
 
 	port := ":8000"
 	fmt.Println("Echo server running on http://localhost" + port)
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(port, mux)
 	if err != nil {
 		fmt.Println("Server Failed:", err)
 	}
