@@ -10,10 +10,10 @@ import (
 
 type Action interface {
 	GetName() string
-	RunAction() error
+	RunAction(*NodeList) error
 }
 
-type ReconcileFunc func() error
+type ReconcileFunc func(*NodeList) error
 
 type point struct {
 	Name   string
@@ -24,8 +24,8 @@ func (p *point) GetName() string {
 	return p.Name
 }
 
-func (p *point) RunAction() error {
-	return p.Action()
+func (p *point) RunAction(nodes *NodeList) error {
+	return p.Action(nodes)
 }
 
 func NewPoint(f ReconcileFunc) *point {
@@ -51,7 +51,7 @@ type World struct {
 	ErrorHandler  Action
 }
 
-func (w *World) RunAction() error {
+func (w *World) RunAction(nodes *NodeList) error {
 	timer := prometheus.NewTimer(ActionDuration.WithLabelValues(w.GetName()))
 	defer timer.ObserveDuration()
 
@@ -60,22 +60,22 @@ func (w *World) RunAction() error {
 	fmt.Println(w.GetName())
 	if w.PreCondition != nil {
 		fmt.Printf("Precondition is running: %v \n", w.PreCondition.GetName())
-		w.PreCondition.RunAction()
+		w.PreCondition.RunAction(nodes)
 	}
 	if w.Actions != nil {
 		fmt.Println("Start to run actions")
 		for _, action := range w.Actions {
 			fmt.Println(action.GetName())
-			action.RunAction()
+			action.RunAction(nodes)
 		}
 	}
 	if w.PostCondition != nil {
 		fmt.Printf("PostCondition is running: %v \n", w.PostCondition.GetName())
-		w.PostCondition.RunAction()
+		w.PostCondition.RunAction(nodes)
 	}
 	if w.ErrorHandler != nil {
 		fmt.Printf("ErrorHandler is running: %v \n", w.ErrorHandler.GetName())
-		w.ErrorHandler.RunAction()
+		w.ErrorHandler.RunAction(nodes)
 	}
 	return nil
 }

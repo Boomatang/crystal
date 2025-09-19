@@ -10,7 +10,10 @@ requires-python = ">=3.13"
 dependencies = [
     "streamlit (>=1.46.0,<2.0.0)",
     "graphviz (>=0.21,<0.22)",
-    "requests (>=2.32.4,<3.0.0)"
+    "requests (>=2.32.4,<3.0.0)",
+    "mkdocs (>=1.6.1,<2.0.0)",
+    "mkdocs-dracula-theme (>=1.0.8,<2.0.0)",
+    "mkdocstrings-python (>=1.18.2,<2.0.0)"
 ]
 
 [tool.poetry]

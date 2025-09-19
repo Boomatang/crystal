@@ -3,22 +3,50 @@ package applicaton
 import (
 	"fmt"
 
+	"github.com/boomatang/crystal/internal/api"
 	"github.com/boomatang/crystal/internal/workflow"
 )
 
-func alan() error {
+func alan(nodes *workflow.NodeList) error {
+	fmt.Println("This was a function call")
+	deployments := nodes.GetNodes("Deployment")
+	for _, node := range deployments {
+		fmt.Printf("This node was returned, %s\n", node)
+		deployment := &api.Deployment{}
+		err := node.Object(deployment)
+		if err != nil {
+			fmt.Println("Some thing bad happened trying to get the Object")
+		}
+		fmt.Printf("Number of replicas: %v\n", deployment.Spec.Replicas)
+	}
+	return nil
+}
+func tom(nodes *workflow.NodeList) error {
+	fmt.Println("This was a function call")
+	node := nodes.Get("Deployment", "tree2")
+	if node == nil {
+		fmt.Println("node was nil, might be too early")
+		return nil
+	}
+
+	subGraph, err := nodes.GetSubGraph(node, workflow.NodeOptList{})
+	if err != nil {
+		fmt.Println("Some thing bad happened trying to get the subGraph")
+	}
+
+	if subGraph == nil {
+		fmt.Println("SubGraph was nil, need to do something about that")
+		return nil
+	}
+
+	fmt.Printf("SubGraph Render: %s\n", subGraph.Render())
+	return nil
+}
+func john(nodes *workflow.NodeList) error {
 	fmt.Println("This was a function call")
 	return nil
 }
-func tom() error {
-	fmt.Println("This was a function call")
-	return nil
-}
-func john() error {
-	fmt.Println("This was a function call")
-	return nil
-}
-func mark() error {
+func mark(nodes *workflow.NodeList) error {
 	fmt.Println("This was a function call")
 	return nil
 }
@@ -31,18 +59,18 @@ func NewApplictaion() *workflow.World {
 	worldOne.PreCondition = actionTom
 	worldOne.PostCondition = actionJohn
 	worldOne.ErrorHandler = actionMark
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		worldOne.AddAction(actionAlan)
 	}
 
 	worldMain := workflow.NewWorld("Main World")
-	worldMain.PreCondition = worldOne
+	worldMain.PreCondition = actionAlan
 	worldMain.AddAction(actionAlan)
 	worldMain.AddAction(actionTom)
 	worldMain.AddAction(actionMark)
 	worldMain.AddAction(actionJohn)
-	worldMain.AddAction(worldOne)
-	worldMain.PostCondition = worldOne
+	// worldMain.AddAction(worldOne)
+	worldMain.PostCondition = actionJohn
 
 	return worldMain
 }

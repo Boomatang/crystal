@@ -1,0 +1,171 @@
+# Crystal Project - Policy Machinery POC
+
+## Project Overview
+This is a proof-of-concept project for policy machinery that combines:
+- **Go backend**: Kubernetes webhook simulator with workflow engine
+- **Python frontend**: Streamlit web interface for visualization
+- **Architecture**: Event-driven workflow system with graph visualization
+
+## Technology Stack
+- **Backend**: Go 1.22+ with Prometheus metrics
+- **Frontend**: Python 3.13+ with Streamlit and Graphviz
+- **Dependencies**: Poetry for Python, Go modules
+- **Visualization**: DOT graph format for workflow visualization
+
+## Code Structure & Conventions
+
+### Go Code Organization
+- **Main entry**: `main.go` - HTTP server with webhook endpoints
+- **Application logic**: `internal/applicaton/main.go` - Workflow world definitions
+- **Workflow engine**: `internal/workflow/` - Core workflow and node management
+- **API types**: `internal/api/` - Kubernetes resource definitions
+- **Package naming**: Use lowercase, avoid underscores in package names
+
+### Go Coding Standards
+- Use `go fmt` and `go vet` for code formatting
+- Follow Go naming conventions (exported = Capitalized, private = lowercase)
+- Use meaningful variable names, avoid abbreviations
+- Prefer composition over inheritance
+- Use interfaces for abstraction (see `Action` interface in workflow)
+- Handle errors explicitly, don't ignore them
+- Use context for cancellation and timeouts
+- Prefer `sync.Mutex` over `sync.RWMutex` unless read-heavy workloads
+
+### Python Code Standards
+- Follow PEP 8 style guidelines
+- Use type hints where appropriate
+- Keep functions small and focused
+- Use meaningful variable names
+- Prefer f-strings over .format() or % formatting
+- Use `requests` library for HTTP calls with proper error handling
+
+### Project-Specific Patterns
+
+#### Workflow System
+- **World**: Main workflow container with pre/post conditions and actions
+- **Node**: Represents Kubernetes resources in the workflow graph
+- **Action**: Interface for executable workflow steps
+- **Link**: Defines relationships between different resource types
+- Use `workflow.NewWorld()` to create workflow containers
+- Use `workflow.NewPoint()` to wrap functions as actions
+- Use `workflow.NewNodeList()` for managing resource nodes
+
+#### Kubernetes Integration
+- Use `AdmissionReview` struct for webhook requests
+- Follow Kubernetes API conventions for resource definitions
+- Use proper JSON tags for serialization
+- Implement proper error handling for webhook responses
+
+#### HTTP Endpoints
+- `/metrics` - Prometheus metrics
+- `/graph` - Workflow graph visualization (DOT format)
+- `/nodelist` - Node relationship graph (DOT format)
+- `/event` - Webhook event handler (POST)
+- `/list` - List all events (GET)
+
+#### Metrics Integration
+- Use Prometheus metrics for monitoring
+- Register metrics in `MustRegister()` function
+- Use appropriate metric types (Counter, Gauge, Histogram)
+- Include meaningful labels for metrics
+
+## Development Guidelines
+
+### Error Handling
+- Always handle errors explicitly in Go
+- Use proper HTTP status codes
+- Log errors with context
+- Return meaningful error messages to clients
+
+### Concurrency
+- Use channels for communication between goroutines
+- Protect shared data with mutexes
+- Use `sync.WaitGroup` for coordinating goroutines
+- Be careful with goroutine leaks
+
+### Testing
+- Write unit tests for workflow functions
+- Test HTTP endpoints with proper test data
+- Mock external dependencies
+- Test error conditions
+
+### Performance
+- Use buffered channels for high-throughput scenarios
+- Consider connection pooling for HTTP clients
+- Monitor memory usage with large node lists
+- Use appropriate data structures for lookups
+
+## File Organization
+- Keep related functionality in the same package
+- Use `internal/` for private packages
+- Place main application logic in `main.go`
+- Keep configuration in separate files
+- Use descriptive file names
+
+## Common Patterns to Follow
+
+### Go Patterns
+```go
+// Error handling
+if err != nil {
+    return fmt.Errorf("context: %w", err)
+}
+
+// Interface implementation
+type MyAction struct{}
+func (m *MyAction) GetName() string { return "MyAction" }
+func (m *MyAction) RunAction() error { return nil }
+
+// HTTP handler pattern
+func myHandler() http.HandlerFunc {
+    return func(w http.ResponseWriter, r *http.Request) {
+        // handler logic
+    }
+}
+```
+
+### Python Patterns
+```python
+# Error handling with requests
+try:
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    return response.text
+except requests.RequestException as e:
+    st.error(f"Request failed: {e}")
+    return None
+
+# Type hints
+def fetch_data(url: str) -> Optional[str]:
+    pass
+```
+
+## Debugging Tips
+- Use `fmt.Println` for Go debugging (consider structured logging later)
+- Use `st.write()` for Streamlit debugging
+- Check Prometheus metrics at `/metrics`
+- Use the graph endpoints to visualize workflow state
+- Monitor goroutine usage and memory
+
+## Security Considerations
+- Validate all webhook input data
+- Use proper authentication for production
+- Sanitize user input
+- Implement rate limiting for webhook endpoints
+- Use HTTPS in production
+
+## Performance Considerations
+- Monitor memory usage with large node lists
+- Use appropriate data structures for lookups
+- Consider caching for frequently accessed data
+- Profile the application for bottlenecks
+- Use connection pooling for external requests
+
+## Future Enhancements
+- Add structured logging (logrus/zap)
+- Implement proper authentication/authorization
+- Add configuration management
+- Implement workflow persistence
+- Add more comprehensive error handling
+- Add integration tests
+- Consider using gRPC for internal communication
