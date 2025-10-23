@@ -147,6 +147,7 @@ func main() {
 	worldMain := applicaton.NewApplictaion()
 	nodes := workflow.NewNodeList()
 	nodes.SetLinker(applicaton.DeploymentConfigMapLinker)
+	nodes.SetLinker(applicaton.ConfigSecretMapLinker)
 
 	eventChan = make(chan bool, 100)
 	go eventProcessor(worldMain, nodes)
