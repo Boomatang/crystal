@@ -13,9 +13,10 @@ import (
 func main() {
 	// Initialize logger from environment variables
 	logger.InitFromEnv()
-	logger.Log.Info("running example one")
+	logger.Log.Info("running example two")
+	logger.Log.Info("adds sleep in workflow to show queuing")
 
-	worldMain := applicaton.NewApplictaionOne()
+	worldMain := applicaton.NewApplictaionTwo()
 	nodes := workflow.NewNodeList()
 	nodes.SetLinker(applicaton.DeploymentConfigMapLinker)
 	nodes.SetLinker(applicaton.ConfigSecretMapLinker)

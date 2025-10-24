@@ -10,19 +10,19 @@ type AdmissionReview struct {
 
 // AdmissionRequest contains the information to create an admission request
 type AdmissionRequest struct {
-	UID             string                 `json:"uid"`
-	Kind            GroupVersionKind       `json:"kind"`
-	Resource        GroupVersionResource   `json:"resource"`
-	RequestKind     GroupVersionKind       `json:"requestKind"`
-	RequestResource GroupVersionResource   `json:"requestResource"`
-	Name            string                 `json:"name"`
-	Namespace       string                 `json:"namespace"`
-	Operation       string                 `json:"operation"`
-	UserInfo        UserInfo               `json:"userInfo"`
-	Object          map[string]any         `json:"object"`
-	OldObject       map[string]interface{} `json:"oldObject"`
-	DryRun          bool                   `json:"dryRun"`
-	Options         map[string]interface{} `json:"options"`
+	UID             string               `json:"uid"`
+	Kind            GroupVersionKind     `json:"kind"`
+	Resource        GroupVersionResource `json:"resource"`
+	RequestKind     GroupVersionKind     `json:"requestKind"`
+	RequestResource GroupVersionResource `json:"requestResource"`
+	Name            string               `json:"name"`
+	Namespace       string               `json:"namespace"`
+	Operation       string               `json:"operation"`
+	UserInfo        UserInfo             `json:"userInfo"`
+	Object          map[string]any       `json:"object"`
+	OldObject       map[string]any       `json:"oldObject"`
+	DryRun          bool                 `json:"dryRun"`
+	Options         map[string]any       `json:"options"`
 }
 
 // AdmissionResponse contains the result of an admission request

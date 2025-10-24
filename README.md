@@ -10,12 +10,14 @@ Crystal is designed as a microservices-based policy machinery system with a clea
 - **Kubernetes webhook integration** for resource monitoring
 - **Prometheus metrics** for observability
 - **Interactive web interface** for system management
+- **Mock event generators** for testing and development
 
 ## Architecture
 
 - **Backend (Go)**: HTTP server with workflow engine, node management, and webhook processing
 - **Frontend (Python)**: Streamlit web interface with graph visualization
-- **Data Flow**: Kubernetes webhooks → Event processing → Node creation → Workflow execution → Visualization
+- **Mock Generators (Python)**: Scripts to generate realistic Kubernetes admission webhook events
+- **Data Flow**: Kubernetes webhooks (or mock events) → Event processing → Node creation → Workflow execution → Visualization
 
 ## Quick Start
 
@@ -47,14 +49,22 @@ LOG_LEVEL=DEBUG LOG_FORMAT=json go run cmd/example_one/main.go
 
 **Frontend Interface:**
 ```sh
-cd frontend
+cd demo
 poetry run streamlit run app.py
+```
+
+**Mock Event Generator** (optional, for testing):
+```sh
+cd demo
+poetry run example_two --replicas 1-5 --sleep 2
 ```
 
 **Access the System:**
 - Backend API: http://localhost:8000
 - Frontend UI: http://localhost:8501
 - Metrics: http://localhost:8000/metrics
+
+See [demo/README.md](demo/README.md) for detailed documentation on the frontend and mock event generators.
 
 ## Features
 

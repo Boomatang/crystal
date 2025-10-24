@@ -26,6 +26,7 @@
         "name": "tree1",
         "namespace": "default",
         "operation": "CREATE",
+        "requestReceivedTimestamp": "2025-10-24T10:29:30.789012Z",
         "userInfo": {
             "username": "admin",
             "uid": "admin",
@@ -36,7 +37,10 @@
             "kind": "ConfigMap",
             "metadata": {
                 "name": "tree1",
-                "namespace": "default"
+                "namespace": "default",
+                "uid": "c5d6e7f8-9012-3456-789a-bcdef0123456",
+                "resourceVersion": "12343",
+                "creationTimestamp": "2025-10-24T10:29:30Z"
                 },
             "data": {
                 "app.properties": "debug=true\nlog.level=info",

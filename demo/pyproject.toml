@@ -19,6 +19,9 @@ dependencies = [
 [tool.poetry]
 packages = [{include = "crystal", from = "src"}]
 
+[project.scripts]
+example_two = 'crystal.scripts.mock_deployment_updates:main'
+
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

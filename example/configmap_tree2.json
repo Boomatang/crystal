@@ -2,7 +2,7 @@
     "apiVersion": "admission.k8s.io/v1",
     "kind": "AdmissionReview",
     "request": {
-        "uid": "705ab4f5-6393-11e8-b7cc-42010a800002",
+        "uid": "806bc5g6-7404-22f9-c8dd-53021b911113",
         "kind": {
             "group": "",
             "version": "v1",
@@ -26,6 +26,7 @@
         "name": "tree2",
         "namespace": "default",
         "operation": "CREATE",
+        "requestReceivedTimestamp": "2025-10-24T10:29:45.234567Z",
         "userInfo": {
             "username": "admin",
             "uid": "admin",
@@ -36,7 +37,10 @@
             "kind": "ConfigMap",
             "metadata": {
                 "name": "tree2",
-                "namespace": "default"
+                "namespace": "default",
+                "uid": "d6e7f8g9-0123-4567-890a-bcdef1234567",
+                "resourceVersion": "12344",
+                "creationTimestamp": "2025-10-24T10:29:45Z"
                 },
             "data": {
                 "app.properties": "debug=true\nlog.level=info",
