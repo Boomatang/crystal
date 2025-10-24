@@ -37,3 +37,6 @@ __pycache__/
 *$py.class
 .venv/
 venv/
+
+# Local Dev AI stuff
+AI_docs/

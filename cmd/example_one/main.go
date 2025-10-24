@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/boomatang/crystal/internal/applicaton"
+	"github.com/boomatang/crystal/internal/logger"
 	"github.com/boomatang/crystal/internal/workflow"
-	"github.com/boomatang/crystal/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 

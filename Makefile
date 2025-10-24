@@ -1,6 +1,6 @@
 .PHONY: run
 run:
-	go run main.go
+	go run ./cmd/example_one/main.go
 
 .PHONY: example
 example:

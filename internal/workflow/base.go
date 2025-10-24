@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/boomatang/crystal/pkg/logger"
+	"github.com/boomatang/crystal/internal/logger"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

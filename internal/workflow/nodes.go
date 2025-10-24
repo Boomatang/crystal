@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/boomatang/crystal/pkg/logger"
+	"github.com/boomatang/crystal/internal/logger"
 	"github.com/jinzhu/copier"
 )
 

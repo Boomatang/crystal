@@ -30,23 +30,24 @@ Crystal is designed as a microservices-based policy machinery system with a clea
 
 **Backend Server:**
 ```sh
-go run main.go
+go run cmd/example_one/main.go
 ```
 
 **With custom logging configuration:**
 ```sh
 # Set log level (DEBUG, INFO, WARN, ERROR)
-LOG_LEVEL=DEBUG go run main.go
+LOG_LEVEL=DEBUG go run cmd/example_one/main.go
 
 # Use JSON format for structured logging
-LOG_FORMAT=json go run main.go
+LOG_FORMAT=json go run cmd/example_one/main.go
 
 # Combine both
-LOG_LEVEL=DEBUG LOG_FORMAT=json go run main.go
+LOG_LEVEL=DEBUG LOG_FORMAT=json go run cmd/example_one/main.go
 ```
 
 **Frontend Interface:**
 ```sh
+cd frontend
 poetry run streamlit run app.py
 ```
 
@@ -83,13 +84,13 @@ Crystal uses structured logging with configurable levels and formats:
 **Examples:**
 ```sh
 # Development with detailed logs
-LOG_LEVEL=DEBUG go run main.go
+LOG_LEVEL=DEBUG go run cmd/example_one/main.go
 
 # Production with JSON logs for log aggregation
-LOG_LEVEL=INFO LOG_FORMAT=json go run main.go
+LOG_LEVEL=INFO LOG_FORMAT=json go run cmd/example_one/main.go
 
 # Minimal logging for performance
-LOG_LEVEL=ERROR go run main.go
+LOG_LEVEL=ERROR go run cmd/example_one/main.go
 ```
 
 ## API Endpoints
@@ -100,23 +101,6 @@ LOG_LEVEL=ERROR go run main.go
 - `POST /event` - Webhook event handler
 - `GET /list` - List all events
 
-## Documentation
-
-Comprehensive documentation is available in the `/docs/` directory:
-
-- [Architecture Overview](docs/architecture/overview.md)
-- [API Documentation](docs/api/endpoints.md)
-- [Workflow System](docs/workflow/overview.md)
-- [Development Setup](docs/development/setup.md)
-- [Deployment Guide](docs/deployment/installation.md)
-
-## Development
-
-See [Development Setup](docs/development/setup.md) for detailed instructions on setting up a development environment.
-
-## Contributing
-
-See [Contributing Guide](docs/development/contributing.md) for information on contributing to the project.
 
 ## License
 

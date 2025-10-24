@@ -1,64 +1,36 @@
 package applicaton
 
 import (
+	"fmt"
+
 	"github.com/boomatang/crystal/internal/api"
 	"github.com/boomatang/crystal/internal/workflow"
-	"github.com/boomatang/crystal/pkg/logger"
 )
 
 func alan(nodes *workflow.NodeList) error {
-	logger.Log.Debug("alan action started")
+	fmt.Println("This was a function call")
 	deployments := nodes.GetNodes("Deployment")
 	for _, node := range deployments {
-		logger.Log.Debug("processing deployment node", "node", node.String())
+		fmt.Printf("This node was returned, %s\n", node)
 		deployment := &api.Deployment{}
 		err := node.Object(deployment)
 		if err != nil {
-			logger.Log.Error("failed to convert node to deployment",
-				"error", err,
-				"node_kind", node.Kind,
-				"node_name", node.Name)
-			continue
+			fmt.Println("Some thing bad happened trying to get the Object")
 		}
-		logger.Log.Info("deployment replicas",
-			"replicas", *deployment.Spec.Replicas,
-			"deployment", deployment.Metadata.Name)
+		fmt.Printf("Number of replicas: %v\n", deployment.Spec.Replicas)
 	}
 	return nil
 }
 func tom(nodes *workflow.NodeList) error {
-	logger.Log.Debug("tom action started")
-	node := nodes.Get("Deployment", "tree2")
-	if node == nil {
-		logger.Log.Debug("node not found yet",
-			"node_kind", "Deployment",
-			"node_name", "tree2")
-		return nil
-	}
-
-	subGraph, err := nodes.GetSubGraph(node, workflow.NodeOptList{})
-	if err != nil {
-		logger.Log.Error("failed to extract subgraph",
-			"error", err,
-			"node_kind", node.Kind,
-			"node_name", node.Name)
-		return err
-	}
-
-	if subGraph == nil {
-		logger.Log.Warn("subgraph is nil")
-		return nil
-	}
-
-	logger.Log.Info("subgraph extracted", "node_count", subGraph.Len())
+	fmt.Println("This was a function call")
 	return nil
 }
 func john(nodes *workflow.NodeList) error {
-	logger.Log.Debug("john action started")
+	fmt.Println("This was a function call")
 	return nil
 }
 func mark(nodes *workflow.NodeList) error {
-	logger.Log.Debug("mark action started")
+	fmt.Println("This was a function call")
 	return nil
 }
 func NewApplictaion() *workflow.World {
