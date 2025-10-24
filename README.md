@@ -33,6 +33,18 @@ Crystal is designed as a microservices-based policy machinery system with a clea
 go run main.go
 ```
 
+**With custom logging configuration:**
+```sh
+# Set log level (DEBUG, INFO, WARN, ERROR)
+LOG_LEVEL=DEBUG go run main.go
+
+# Use JSON format for structured logging
+LOG_FORMAT=json go run main.go
+
+# Combine both
+LOG_LEVEL=DEBUG LOG_FORMAT=json go run main.go
+```
+
 **Frontend Interface:**
 ```sh
 poetry run streamlit run app.py
@@ -50,6 +62,35 @@ poetry run streamlit run app.py
 - **Graph Visualization**: Interactive visualization of workflows and resource relationships
 - **Webhook Integration**: Process Kubernetes admission reviews in real-time
 - **Metrics & Monitoring**: Prometheus metrics for system observability
+- **Structured Logging**: Configurable log levels and formats (text/JSON) for better debugging and production use
+
+## Configuration
+
+### Logging
+
+Crystal uses structured logging with configurable levels and formats:
+
+**Environment Variables:**
+- `LOG_LEVEL`: Set logging verbosity (DEBUG, INFO, WARN, ERROR). Default: INFO
+- `LOG_FORMAT`: Output format (text, json). Default: text
+
+**Log Levels:**
+- **DEBUG**: Detailed execution flow, useful for development and troubleshooting
+- **INFO**: Normal operational messages (workflow started, nodes added, etc.)
+- **WARN**: Unexpected but recoverable conditions
+- **ERROR**: Failures that need attention
+
+**Examples:**
+```sh
+# Development with detailed logs
+LOG_LEVEL=DEBUG go run main.go
+
+# Production with JSON logs for log aggregation
+LOG_LEVEL=INFO LOG_FORMAT=json go run main.go
+
+# Minimal logging for performance
+LOG_LEVEL=ERROR go run main.go
+```
 
 ## API Endpoints
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/boomatang/crystal/pkg/logger"
 	"github.com/jinzhu/copier"
 )
 
@@ -144,7 +145,7 @@ func (nl *NodeList) GetSubGraph(node *Node, opt NodeOptList) (*NodeList, error) 
 }
 
 func followParent(nl *NodeList, node *Node) {
-	fmt.Printf("Following parents of %s\n", node)
+	logger.Log.Debug("traversing parent nodes", "node", node.String())
 	for _, n := range node.Parents {
 		nodeCopy := &Node{}
 		copier.Copy(nodeCopy, n)
@@ -155,7 +156,7 @@ func followParent(nl *NodeList, node *Node) {
 }
 
 func followChild(nl *NodeList, node *Node) {
-	fmt.Printf("Following childern of %s\n", node)
+	logger.Log.Debug("traversing child nodes", "node", node.String())
 	for _, n := range node.Childern {
 		nodeCopy := &Node{}
 		copier.Copy(nodeCopy, n)
@@ -247,7 +248,7 @@ func (nl *NodeList) Render() string {
 
 	s = fmt.Sprintf("digraph {%v\n}", s)
 
-	fmt.Println("Value of s:", s)
+	logger.Log.Debug("graph render output", "length", len(s))
 
 	return s
 }

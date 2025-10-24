@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"runtime"
 
+	"github.com/boomatang/crystal/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -57,24 +58,34 @@ func (w *World) RunAction(nodes *NodeList) error {
 
 	ActionTotal.WithLabelValues(w.GetName()).Inc()
 
-	fmt.Println(w.GetName())
+	logger.Log.Info("workflow started", "workflow", w.GetName())
 	if w.PreCondition != nil {
-		fmt.Printf("Precondition is running: %v \n", w.PreCondition.GetName())
+		logger.Log.Debug("executing precondition",
+			"workflow", w.GetName(),
+			"precondition", w.PreCondition.GetName())
 		w.PreCondition.RunAction(nodes)
 	}
 	if w.Actions != nil {
-		fmt.Println("Start to run actions")
+		logger.Log.Debug("executing actions",
+			"workflow", w.GetName(),
+			"count", len(w.Actions))
 		for _, action := range w.Actions {
-			fmt.Println(action.GetName())
+			logger.Log.Debug("executing action",
+				"workflow", w.GetName(),
+				"action", action.GetName())
 			action.RunAction(nodes)
 		}
 	}
 	if w.PostCondition != nil {
-		fmt.Printf("PostCondition is running: %v \n", w.PostCondition.GetName())
+		logger.Log.Debug("executing postcondition",
+			"workflow", w.GetName(),
+			"postcondition", w.PostCondition.GetName())
 		w.PostCondition.RunAction(nodes)
 	}
 	if w.ErrorHandler != nil {
-		fmt.Printf("ErrorHandler is running: %v \n", w.ErrorHandler.GetName())
+		logger.Log.Warn("executing error handler",
+			"workflow", w.GetName(),
+			"handler", w.ErrorHandler.GetName())
 		w.ErrorHandler.RunAction(nodes)
 	}
 	return nil
@@ -123,8 +134,7 @@ func (g *WorldGraph) Render() string {
 		s = fmt.Sprintf("%v\n%v", s, p)
 		pre = append(pre, p)
 	default:
-		fmt.Println("we not good")
-		fmt.Println(v)
+		logger.Log.Warn("unknown precondition type", "type", fmt.Sprintf("%T", v))
 	}
 
 	for _, action := range g.World.Actions {
@@ -147,8 +157,7 @@ func (g *WorldGraph) Render() string {
 			}
 
 		default:
-			fmt.Println("we not good")
-			fmt.Println(v)
+			logger.Log.Warn("unknown action type", "type", fmt.Sprintf("%T", v))
 		}
 	}
 
@@ -170,8 +179,7 @@ func (g *WorldGraph) Render() string {
 				s = fmt.Sprintf("%v\n%v -> %v", s, node, pp)
 			}
 		default:
-			fmt.Println("we not good")
-			fmt.Println(v)
+			logger.Log.Warn("unknown postcondition type", "type", fmt.Sprintf("%T", v))
 		}
 	}
 

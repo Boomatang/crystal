@@ -8,6 +8,7 @@ import (
 
 	"github.com/boomatang/crystal/internal/applicaton"
 	"github.com/boomatang/crystal/internal/workflow"
+	"github.com/boomatang/crystal/pkg/logger"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -82,7 +83,7 @@ func nodelistGraphHandler(nodes *workflow.NodeList) http.HandlerFunc {
 
 func eventHandler(c chan bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("running the event handler")
+		logger.Log.Info("event handler started")
 
 		event := workflow.AdmissionReview{}
 		err := json.NewDecoder(r.Body).Decode(&event)
@@ -98,7 +99,7 @@ func eventHandler(c chan bool) http.HandlerFunc {
 
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(event)
-		fmt.Println("event handler finished: fully completed")
+		logger.Log.Info("event handler completed")
 	}
 
 }
@@ -122,27 +123,31 @@ func eventProcessor(world *workflow.World, nodes *workflow.NodeList) {
 		for _, l := range load {
 			existing := nodes.Get(l.Request.Kind.Kind, l.Request.Name)
 
-			fmt.Println("debug", "existing", existing)
+			logger.Log.Debug("node exists check", "existing", existing != nil)
 			if existing == nil {
 				node := workflow.NewNode(*l.Request)
-				fmt.Println("adding new node", "node", node)
+				logger.Log.Info("adding new node",
+					"node_kind", node.Kind,
+					"node_name", node.Name)
 				nodes.Add(node)
 				existing = node
 			}
-			fmt.Println("node count", "count", nodes.Len())
+			logger.Log.Debug("node count updated", "count", nodes.Len())
 			nodes.Link(existing)
 		}
-		fmt.Println("triggered by event")
+		logger.Log.Info("workflow triggered by event")
 
 		workflow.NodeCount.Set(float64(nodes.Len()))
 		err := world.RunAction(nodes)
 		if err != nil {
-			fmt.Printf("error was raised, %s", err)
+			logger.Log.Error("workflow execution error", "error", err)
 		}
 	}
 }
 
 func main() {
+	// Initialize logger from environment variables
+	logger.InitFromEnv()
 
 	worldMain := applicaton.NewApplictaion()
 	nodes := workflow.NewNodeList()
@@ -161,10 +166,10 @@ func main() {
 	mux.Handle("/list", listEventsHandler())
 
 	port := ":8000"
-	fmt.Println("Echo server running on http://localhost" + port)
+	logger.Log.Info("server started", "port", port)
 	err := http.ListenAndServe(port, mux)
 	if err != nil {
-		fmt.Println("Server Failed:", err)
+		logger.Log.Error("server failed to start", "error", err)
 	}
 
 }

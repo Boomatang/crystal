@@ -1,53 +1,64 @@
 package applicaton
 
 import (
-	"fmt"
-
 	"github.com/boomatang/crystal/internal/api"
 	"github.com/boomatang/crystal/internal/workflow"
+	"github.com/boomatang/crystal/pkg/logger"
 )
 
 func alan(nodes *workflow.NodeList) error {
-	fmt.Println("This was a function call")
+	logger.Log.Debug("alan action started")
 	deployments := nodes.GetNodes("Deployment")
 	for _, node := range deployments {
-		fmt.Printf("This node was returned, %s\n", node)
+		logger.Log.Debug("processing deployment node", "node", node.String())
 		deployment := &api.Deployment{}
 		err := node.Object(deployment)
 		if err != nil {
-			fmt.Println("Some thing bad happened trying to get the Object")
+			logger.Log.Error("failed to convert node to deployment",
+				"error", err,
+				"node_kind", node.Kind,
+				"node_name", node.Name)
+			continue
 		}
-		fmt.Printf("Number of replicas: %v\n", deployment.Spec.Replicas)
+		logger.Log.Info("deployment replicas",
+			"replicas", *deployment.Spec.Replicas,
+			"deployment", deployment.Metadata.Name)
 	}
 	return nil
 }
 func tom(nodes *workflow.NodeList) error {
-	fmt.Println("This was a function call")
+	logger.Log.Debug("tom action started")
 	node := nodes.Get("Deployment", "tree2")
 	if node == nil {
-		fmt.Println("node was nil, might be too early")
+		logger.Log.Debug("node not found yet",
+			"node_kind", "Deployment",
+			"node_name", "tree2")
 		return nil
 	}
 
 	subGraph, err := nodes.GetSubGraph(node, workflow.NodeOptList{})
 	if err != nil {
-		fmt.Println("Some thing bad happened trying to get the subGraph")
+		logger.Log.Error("failed to extract subgraph",
+			"error", err,
+			"node_kind", node.Kind,
+			"node_name", node.Name)
+		return err
 	}
 
 	if subGraph == nil {
-		fmt.Println("SubGraph was nil, need to do something about that")
+		logger.Log.Warn("subgraph is nil")
 		return nil
 	}
 
-	fmt.Printf("SubGraph Render: %s\n", subGraph.Render())
+	logger.Log.Info("subgraph extracted", "node_count", subGraph.Len())
 	return nil
 }
 func john(nodes *workflow.NodeList) error {
-	fmt.Println("This was a function call")
+	logger.Log.Debug("john action started")
 	return nil
 }
 func mark(nodes *workflow.NodeList) error {
-	fmt.Println("This was a function call")
+	logger.Log.Debug("mark action started")
 	return nil
 }
 func NewApplictaion() *workflow.World {
