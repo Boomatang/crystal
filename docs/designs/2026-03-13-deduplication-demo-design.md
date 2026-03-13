@@ -101,6 +101,12 @@ Fetches current queue state from `/list` endpoint.
 
 **Returns:** List of AdmissionReview events currently in queue
 
+## Implementation Tasks
+
+- [ ] [Add send_event() function to demo client](https://github.com/Boomatang/crystal/issues/6)
+- [ ] [Add fetch_event_list() function to demo client](https://github.com/Boomatang/crystal/issues/7)
+- [ ] [Add deduplication demo page to Streamlit app](https://github.com/Boomatang/crystal/issues/8)
+
 ## Out of Scope
 
 - Server-side changes to return explicit status
@@ -113,3 +119,4 @@ Fetches current queue state from `/list` endpoint.
 | Date | Change |
 |------|--------|
 | 2026-03-13 | Initial design |
+| 2026-03-13 | Added Implementation Tasks section with linked GitHub issues #6-#8 |
