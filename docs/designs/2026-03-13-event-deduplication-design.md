@@ -155,6 +155,45 @@ Log the following with structured fields (`kind`, `namespace`, `name`, `resource
 | Numeric resourceVersion | resourceVersion as float64 (JSON number) handled correctly |
 | Existing unparseable | When existing event has invalid resourceVersion, incoming is rejected with warning |
 
+## Implementation Tasks
+
+- [ ] [Create EventQueue type with deduplication logic](https://github.com/Boomatang/crystal/issues/1)
+  - [ ] Implement NewEventQueue constructor
+  - [ ] Implement Add method with resourceVersion comparison
+  - [ ] Implement getResourceVersion helper function
+  - [ ] Implement DrainAndCopy method
+  - [ ] Implement Len method
+  - [ ] Implement Snapshot method
+  - [ ] Add structured logging
+
+- [ ] [Create EventQueue unit tests](https://github.com/Boomatang/crystal/issues/2)
+  - [ ] Test: Add new event
+  - [ ] Test: Add newer event (replace)
+  - [ ] Test: Reject older event
+  - [ ] Test: Multiple resources
+  - [ ] Test: Same name different namespace
+  - [ ] Test: DrainAndCopy clears queue
+  - [ ] Test: Snapshot preserves queue
+  - [ ] Test: Concurrent access with -race
+  - [ ] Test: Invalid resourceVersion string
+  - [ ] Test: Numeric resourceVersion
+  - [ ] Test: Existing unparseable resourceVersion
+
+- [ ] [Update http handlers to use EventQueue](https://github.com/Boomatang/crystal/issues/3)
+  - [ ] Remove global `events` slice and `mu` mutex
+  - [ ] Update EventHandler to use EventQueue.Add
+  - [ ] Update EventProcessor to use EventQueue.DrainAndCopy
+  - [ ] Update ListEventsHandler to use EventQueue.Snapshot
+
+- [ ] [Update example_two to use EventQueue](https://github.com/Boomatang/crystal/issues/4)
+  - [ ] Create EventQueue instance
+  - [ ] Pass queue to EventProcessor
+  - [ ] Pass queue to EventHandler
+  - [ ] Pass queue to ListEventsHandler
+
+- [ ] [Update example_one to use EventQueue](https://github.com/Boomatang/crystal/issues/5)
+  - [ ] Same changes as example_two
+
 ## Files Changed
 
 | File | Change |
@@ -177,3 +216,5 @@ Log the following with structured fields (`kind`, `namespace`, `name`, `resource
 |------|--------|
 | 2026-03-13 | Initial design |
 | 2026-03-13 | Added namespace to deduplication key, Snapshot() method, improved error handling, expanded test cases |
+| 2026-03-13 | Added Implementation Tasks section with TODO checkboxes |
+| 2026-03-13 | Created GitHub issues #1-#5 and linked TODOs |

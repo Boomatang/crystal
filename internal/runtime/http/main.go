@@ -4,15 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/boomatang/crystal/internal/logger"
 	"github.com/boomatang/crystal/internal/workflow"
 )
 
 var (
-	events    []workflow.AdmissionReview
-	mu        sync.Mutex
 	EventChan chan bool
 )
 
@@ -75,7 +72,7 @@ func NodelistGraphHandler(nodes *workflow.NodeList) http.HandlerFunc {
 	}
 }
 
-func EventHandler(c chan bool) http.HandlerFunc {
+func EventHandler(c chan bool, queue *workflow.EventQueue) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Info("event handler started")
 
@@ -86,10 +83,18 @@ func EventHandler(c chan bool) http.HandlerFunc {
 			return
 		}
 
-		mu.Lock()
-		events = append(events, event)
-		mu.Unlock()
-		c <- true
+		added, replaced := queue.Add(event)
+		if added {
+			c <- true
+		}
+
+		if added && !replaced {
+			logger.Log.Info("event added")
+		} else if added && replaced {
+			logger.Log.Info("event replaced older version")
+		} else {
+			logger.Log.Info("event skipped")
+		}
 
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(event)
@@ -98,22 +103,16 @@ func EventHandler(c chan bool) http.HandlerFunc {
 
 }
 
-func ListEventsHandler() http.HandlerFunc {
+func ListEventsHandler(queue *workflow.EventQueue) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		mu.Lock()
-		defer mu.Unlock()
-
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(events)
+		json.NewEncoder(w).Encode(queue.Snapshot())
 	}
 }
 
-func EventProcessor(world *workflow.World, nodes *workflow.NodeList) {
+func EventProcessor(world *workflow.World, nodes *workflow.NodeList, queue *workflow.EventQueue) {
 	for range EventChan {
-		mu.Lock()
-		load := events
-		events = make([]workflow.AdmissionReview, 0)
-		mu.Unlock()
+		load := queue.DrainAndCopy()
 		for _, l := range load {
 			existing := nodes.Get(l.Request.Kind.Kind, l.Request.Name)
 
