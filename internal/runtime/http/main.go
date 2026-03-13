@@ -4,15 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"github.com/boomatang/crystal/internal/logger"
 	"github.com/boomatang/crystal/internal/workflow"
 )
 
 var (
-	events    []workflow.AdmissionReview
-	mu        sync.Mutex
 	EventChan chan bool
 )
 
@@ -75,45 +72,36 @@ func NodelistGraphHandler(nodes *workflow.NodeList) http.HandlerFunc {
 	}
 }
 
-func EventHandler(c chan bool) http.HandlerFunc {
+func EventHandler(c chan bool, queue *workflow.EventQueue) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Log.Info("event handler started")
-
 		event := workflow.AdmissionReview{}
 		err := json.NewDecoder(r.Body).Decode(&event)
 		if err != nil {
-			http.Error(w, "Invaild JSON", http.StatusBadRequest)
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
 
-		mu.Lock()
-		events = append(events, event)
-		mu.Unlock()
-		c <- true
+		added, _ := queue.Add(event)
+		if added {
+			c <- true
+		}
 
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(event)
-		logger.Log.Info("event handler completed")
 	}
 
 }
 
-func ListEventsHandler() http.HandlerFunc {
+func ListEventsHandler(queue *workflow.EventQueue) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		mu.Lock()
-		defer mu.Unlock()
-
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(events)
+		json.NewEncoder(w).Encode(queue.Snapshot())
 	}
 }
 
-func EventProcessor(world *workflow.World, nodes *workflow.NodeList) {
+func EventProcessor(world *workflow.World, nodes *workflow.NodeList, queue *workflow.EventQueue) {
 	for range EventChan {
-		mu.Lock()
-		load := events
-		events = make([]workflow.AdmissionReview, 0)
-		mu.Unlock()
+		load := queue.DrainAndCopy()
 		for _, l := range load {
 			existing := nodes.Get(l.Request.Kind.Kind, l.Request.Name)
 
@@ -125,6 +113,11 @@ func EventProcessor(world *workflow.World, nodes *workflow.NodeList) {
 					"node_name", node.Name)
 				nodes.Add(node)
 				existing = node
+			} else {
+				existing.Data = l.Request.Object
+				logger.Log.Info("updating existing node",
+					"node_kind", existing.Kind,
+					"node_name", existing.Name)
 			}
 			logger.Log.Debug("node count updated", "count", nodes.Len())
 			nodes.Link(existing)

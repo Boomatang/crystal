@@ -20,16 +20,18 @@ func main() {
 	nodes.SetLinker(applicaton.DeploymentConfigMapLinker)
 	nodes.SetLinker(applicaton.ConfigSecretMapLinker)
 
+	queue := workflow.NewEventQueue()
+
 	rhttp.EventChan = make(chan bool, 100)
-	go rhttp.EventProcessor(worldMain, nodes)
+	go rhttp.EventProcessor(worldMain, nodes, queue)
 	mux := http.NewServeMux()
 
 	// Expose metrics at /metrics
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.Handle("/graph", rhttp.WorkflowGraphHandler(worldMain))
 	mux.Handle("/nodelist", rhttp.NodelistGraphHandler(nodes))
-	mux.Handle("/event", rhttp.EventHandler(rhttp.EventChan))
-	mux.Handle("/list", rhttp.ListEventsHandler())
+	mux.Handle("/event", rhttp.EventHandler(rhttp.EventChan, queue))
+	mux.Handle("/list", rhttp.ListEventsHandler(queue))
 
 	port := ":8000"
 	logger.Log.Info("server started", "port", port)
