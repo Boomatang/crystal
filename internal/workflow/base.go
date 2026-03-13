@@ -58,6 +58,12 @@ func (w *World) RunAction(nodes *NodeList) error {
 
 	ActionTotal.WithLabelValues(w.GetName()).Inc()
 
+	for _, node := range nodes.nodes {
+		rv := getResourceVersionFromNode(node)
+		logger.Log.Info("PROCESSING",
+			"resource", fmt.Sprintf("%s/%s", node.Kind, node.Name),
+			"rv", rv)
+	}
 	logger.Log.Info("workflow started", "workflow", w.GetName())
 	if w.PreCondition != nil {
 		logger.Log.Debug("executing precondition",
@@ -229,4 +235,41 @@ func name(n string) string {
 	counter++
 	return fmt.Sprintf("\"%d.%v\"", counter, n)
 
+}
+
+// getResourceVersionFromNode extracts the resourceVersion from a Node's Data field.
+// Returns the resourceVersion as a string, or "unknown" if it cannot be extracted.
+func getResourceVersionFromNode(node *Node) string {
+	if node == nil || node.Data == nil {
+		return "unknown"
+	}
+
+	dataMap, ok := node.Data.(map[string]any)
+	if !ok {
+		return "unknown"
+	}
+
+	metadata, ok := dataMap["metadata"]
+	if !ok {
+		return "unknown"
+	}
+
+	metadataMap, ok := metadata.(map[string]any)
+	if !ok {
+		return "unknown"
+	}
+
+	rv, ok := metadataMap["resourceVersion"]
+	if !ok {
+		return "unknown"
+	}
+
+	switch v := rv.(type) {
+	case string:
+		return v
+	case float64:
+		return fmt.Sprintf("%.0f", v)
+	default:
+		return "unknown"
+	}
 }
