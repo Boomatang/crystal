@@ -74,31 +74,20 @@ func NodelistGraphHandler(nodes *workflow.NodeList) http.HandlerFunc {
 
 func EventHandler(c chan bool, queue *workflow.EventQueue) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logger.Log.Info("event handler started")
-
 		event := workflow.AdmissionReview{}
 		err := json.NewDecoder(r.Body).Decode(&event)
 		if err != nil {
-			http.Error(w, "Invaild JSON", http.StatusBadRequest)
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
 
-		added, replaced := queue.Add(event)
+		added, _ := queue.Add(event)
 		if added {
 			c <- true
 		}
 
-		if added && !replaced {
-			logger.Log.Info("event added")
-		} else if added && replaced {
-			logger.Log.Info("event replaced older version")
-		} else {
-			logger.Log.Info("event skipped")
-		}
-
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(event)
-		logger.Log.Info("event handler completed")
 	}
 
 }

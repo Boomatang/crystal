@@ -42,10 +42,9 @@ func (q *EventQueue) Add(event AdmissionReview) (added bool, replaced bool) {
 	// Get resourceVersion for the incoming event
 	incomingVersion, err := getResourceVersion(event)
 	if err != nil {
-		logger.Log.Warn("event rejected (invalid resourceVersion)",
-			"kind", event.Request.Kind.Kind,
-			"namespace", event.Request.Namespace,
-			"name", event.Request.Name,
+		logger.Log.Warn("REJECTED",
+			"resource", key,
+			"reason", "invalid resourceVersion",
 			"error", err)
 		return false, false
 	}
@@ -55,10 +54,8 @@ func (q *EventQueue) Add(event AdmissionReview) (added bool, replaced bool) {
 		existingVersion, err := getResourceVersion(existing)
 		if err != nil {
 			// Existing event is unparseable, log warning and reject incoming
-			logger.Log.Warn("existing event has invalid resourceVersion, rejecting incoming event",
-				"kind", event.Request.Kind.Kind,
-				"namespace", event.Request.Namespace,
-				"name", event.Request.Name,
+			logger.Log.Warn("event rejected: existing has invalid resourceVersion",
+				"resource", key,
 				"error", err)
 			return false, false
 		}
@@ -67,32 +64,29 @@ func (q *EventQueue) Add(event AdmissionReview) (added bool, replaced bool) {
 		if incomingVersion > existingVersion {
 			// Replace with newer version
 			q.events[key] = event
-			logger.Log.Info("event replaced older version",
-				"kind", event.Request.Kind.Kind,
-				"namespace", event.Request.Namespace,
-				"name", event.Request.Name,
-				"resourceVersion", incomingVersion,
-				"existing_resourceVersion", existingVersion)
+			logger.Log.Info("REPLACED",
+				"resource", key,
+				"rv", incomingVersion,
+				"prev_rv", existingVersion,
+				"queue_size", len(q.events))
 			return true, true
 		}
 
 		// Incoming event is older, skip it
-		logger.Log.Info("event skipped (older than existing)",
-			"kind", event.Request.Kind.Kind,
-			"namespace", event.Request.Namespace,
-			"name", event.Request.Name,
-			"resourceVersion", incomingVersion,
-			"existing_resourceVersion", existingVersion)
+		logger.Log.Info("SKIPPED",
+			"resource", key,
+			"rv", incomingVersion,
+			"existing_rv", existingVersion,
+			"queue_size", len(q.events))
 		return false, false
 	}
 
 	// New resource, add it
 	q.events[key] = event
-	logger.Log.Info("event added",
-		"kind", event.Request.Kind.Kind,
-		"namespace", event.Request.Namespace,
-		"name", event.Request.Name,
-		"resourceVersion", incomingVersion)
+	logger.Log.Info("ADDED",
+		"resource", key,
+		"rv", incomingVersion,
+		"queue_size", len(q.events))
 	return true, false
 }
 
