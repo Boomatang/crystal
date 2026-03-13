@@ -1,6 +1,6 @@
 # Development Notes
 
-Last updated: 2025-10-24
+Last updated: 2026-03-13
 
 ## NEXT PRIORITY: Event Deduplication During Workflow Execution
 
@@ -44,54 +44,13 @@ poetry run example_two --replicas 1-5 --sleep 1
 
 ---
 
-## Known Issue: Replica Count Not Updating (BLOCKING DEDUPLICATION DEMO)
-
-### Problem
-When using the `example_two` mock event generator to send Deployment UPDATE events with incrementing replica counts (1→2→3→4→5), the Go backend logs show the replica count never changes - it stays at the initial value.
-
-### Root Cause (IDENTIFIED)
-The bug is in **`internal/runtime/http/main.go`** in the `EventProcessor` function (lines 118-128).
-
-**Current behavior:**
-```go
-existing := nodes.Get(l.Request.Kind.Kind, l.Request.Name)
-
-if existing == nil {
-    node := workflow.NewNode(*l.Request)
-    nodes.Add(node)
-    existing = node
-}
-```
-
-**The problem:**
-- When an UPDATE event arrives for an existing Deployment (same name), the code finds the existing node
-- But it **never updates the node's `Data` field** with the new object from the event
-- The node keeps the old replica count from the first CREATE/UPDATE event
-
-**Verification:**
-- Python script (`example_two`) is working correctly - it sends events with incrementing replicas (verified in code review)
-- The issue is that the Go code doesn't update existing nodes when UPDATE events arrive
-
-### Solution (NOT YET IMPLEMENTED)
-Update the `EventProcessor` function to refresh the node's data when an UPDATE event is received:
-
-```go
-existing := nodes.Get(l.Request.Kind.Kind, l.Request.Name)
-
-if existing == nil {
-    node := workflow.NewNode(*l.Request)
-    nodes.Add(node)
-    existing = node
-} else {
-    // UPDATE: refresh the node's data with the latest state
-    existing.Data = l.Request.Object
-}
-```
-
-### Related Fix (COMPLETED)
-Fixed a separate bug in `internal/applicaton/actions.go:21` where `deployment.Spec.Replicas` was being logged as a pointer address instead of the actual value. Now correctly dereferences the `*int32` pointer.
-
 ## Recent Changes
+
+### Node Update Fix (COMPLETED - 2026-03-13)
+Fixed bug where UPDATE events for existing nodes were not updating the node's `Data` field. The `EventProcessor` in `internal/runtime/http/main.go` now correctly updates `existing.Data` when a node already exists, and logs `"updating existing node"` with kind and name.
+
+### Replica Pointer Dereference Fix (COMPLETED)
+Fixed a separate bug in `internal/applicaton/actions.go:21` where `deployment.Spec.Replicas` was being logged as a pointer address instead of the actual value. Now correctly dereferences the `*int32` pointer.
 
 ### Demo Tool Refactoring (COMPLETED)
 - Moved `demo/templates/` → `demo/src/crystal/templates/`
@@ -114,9 +73,8 @@ poetry run example_two --replicas 1-5 --sleep 2
 
 ## Next Steps
 
-### Phase 1: Fix Node Updates (Prerequisite)
-1. **Fix the node update issue** in `internal/runtime/http/main.go:118-128` - update `existing.Data` when node exists
-2. Test with `example_two` to verify replica counts update correctly
+### Phase 1: Fix Node Updates (COMPLETED)
+Node updates now work correctly. See "Node Update Fix" in Recent Changes.
 
 ### Phase 2: Implement Event Deduplication (Main Goal)
 1. **Modify EventProcessor** to deduplicate events by resource (kind + name)
@@ -149,7 +107,7 @@ crystal/
 │   │   ├── main.go           # Workflow definitions
 │   │   └── actions.go        # Workflow action functions (alan, tom, sleepy, etc.)
 │   ├── runtime/http/
-│   │   └── main.go           # HTTP handlers and EventProcessor [BUG HERE]
+│   │   └── main.go           # HTTP handlers and EventProcessor
 │   ├── workflow/
 │   │   └── nodes.go          # Node and NodeList implementation
 │   └── api/

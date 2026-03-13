@@ -125,6 +125,11 @@ func EventProcessor(world *workflow.World, nodes *workflow.NodeList) {
 					"node_name", node.Name)
 				nodes.Add(node)
 				existing = node
+			} else {
+				existing.Data = l.Request.Object
+				logger.Log.Info("updating existing node",
+					"node_kind", existing.Kind,
+					"node_name", existing.Name)
 			}
 			logger.Log.Debug("node count updated", "count", nodes.Len())
 			nodes.Link(existing)
